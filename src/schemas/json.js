@@ -13,6 +13,7 @@ function getPropertyFormat(value) {
 }
 
 function getPropertyType(value) {
+  // Type.string(value) outputs type as a string
   var type = Type.string(value).toLowerCase()
 
   if (type === 'date') return 'string'
@@ -109,6 +110,7 @@ function processArray(array, output, nested) {
       } else {
         arrayItem = {}
         arrayItem.type = itemType
+        arrayItem.example = value
         if (itemFormat) {
           arrayItem.format = itemFormat
         }
@@ -133,6 +135,12 @@ function processArray(array, output, nested) {
   return nested ? output.items : output
 }
 
+/**
+ * @summary Handle creating schema for found JSON object
+ * @param {Object} object The object to process
+ * @param {} output Not sure what this is
+ * @param {boolean} nested True if this object is nested in array.
+ */
 function processObject(object, output, nested) {
   if (nested && output) {
     output = { properties: output }
@@ -142,15 +150,21 @@ function processObject(object, output, nested) {
     output.properties = output.properties || {}
   }
 
+  // Iterate over each key in the current object
   for (var key in object) {
+    // Get the value of the current key
     var value = object[key]
+    // Get the type of the current key's value
     var type = getPropertyType(value)
+    // Not sure what this is for
     var format = getPropertyFormat(value)
 
     type = type === 'undefined' ? 'null' : type
 
     if (type === 'object') {
       output.properties[key] = processObject(value, output.properties[key])
+      // The continue statement terminates execution of statements in current iteration
+      // of the current loop; continues execution of the loop with next iteration
       continue
     }
 
@@ -182,6 +196,9 @@ function processObject(object, output, nested) {
 
     output.properties[key] = {}
     output.properties[key].type = type
+    if (type !== 'object' && type !== 'array') {
+        output.properties[key].example = value
+    }
 
     if (format) {
       output.properties[key].format = format
